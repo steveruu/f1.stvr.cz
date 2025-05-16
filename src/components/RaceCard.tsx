@@ -12,30 +12,10 @@ interface RaceCardProps {
 }
 
 export function RaceCard({ race, onClick, isPast }: RaceCardProps) {
-  // Safely format date and time
-  let formattedDate = "TBA";
-  let formattedTime = "TBA";
-  
-  try {
-    if (race.date && race.time) {
-      const dateTimeString = `${race.date}T${race.time}`;
-      // Validate date string before parsing
-      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(dateTimeString)) {
-        const raceDate = parseISO(dateTimeString);
-        if (!isNaN(raceDate.getTime())) {
-          formattedDate = format(raceDate, "MMM d, yyyy");
-          formattedTime = format(raceDate, "h:mm a");
-        }
-      }
-    } else if (race.date) {
-      const raceDate = parseISO(race.date);
-      if (!isNaN(raceDate.getTime())) {
-        formattedDate = format(raceDate, "MMM d, yyyy");
-      }
-    }
-  } catch (error) {
-    console.error("Error formatting race date:", error);
-  }
+  // Format date for display
+  const raceDate = parseISO(`${race.date}T${race.time || '00:00:00Z'}`);
+  const formattedDate = format(raceDate, "MMM d, yyyy");
+  const formattedTime = race.time ? format(raceDate, "h:mm a") : 'TBA';
 
   return (
     <Card 
