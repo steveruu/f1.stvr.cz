@@ -175,7 +175,7 @@ const Index = () => {
                       <div className="w-1 sm:w-1.5 h-6 sm:h-8 bg-gray-500 mr-2 sm:mr-3 rounded-full"></div>
                       Dokončené závody
                     </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-10">
                       {pastRaces.map((race) => (
                         <RaceCard
                           key={race.round}
