@@ -51,7 +51,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
 
   if (!race) return null;
 
-  // Format dates for display safely
+  // TBA
   let formattedDate = "Bude oznámeno";
   let formattedTime = "Bude oznámeno";
   let isPast = false;
@@ -249,7 +249,6 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
   );
 }
 
-// Helper component for schedule items
 function EventItem({ title, date, time, highlight = false }) {
   let formattedDate = "Bude oznámeno";
   let formattedTime = "Bude oznámeno";
@@ -258,7 +257,7 @@ function EventItem({ title, date, time, highlight = false }) {
     if (date) {
       const eventDate = parseISO(`${date}T${time || '00:00:00Z'}`);
       if (isValid(eventDate)) {
-        formattedDate = format(eventDate, "E, d. MMM", { locale: cs });
+        formattedDate = format(eventDate, "EEEE, d. MMMM", { locale: cs });
         formattedTime = time ? format(eventDate, "HH:mm", { locale: cs }) : 'Bude oznámeno';
       }
     }

@@ -23,7 +23,7 @@ export default {
         },
         extend: {
             fontFamily: {
-                f1: ["Bricolage Grotesque", "Inter", "sans-serif"],
+                f1: ["Twemoji Country Flags", "Inter", "sans-serif"],
             },
             colors: {
                 "f1-red": "#E10600",

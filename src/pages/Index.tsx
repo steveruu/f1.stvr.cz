@@ -47,16 +47,16 @@ const Index = () => {
       {/* Main content */}
       <main className="container mx-auto py-10 px-4 md:px-6">
         <Tabs defaultValue="calendar" className="w-full">
-          <TabsList className="w-full md:w-auto bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl mb-8 p-1">
-            <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-f1-red data-[state=active]:text-white">
+          <TabsList className="w-full md:w-auto bg-black/40 backdrop-blur-sm border border-gray-800 rounded-full mb-8 p-1">
+            <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-full data-[state=active]:bg-f1-red data-[state=active]:text-white">
               <CalendarIcon className="h-4 w-4" />
               <span>Kalendář závodů</span>
             </TabsTrigger>
-            <TabsTrigger value="drivers" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-f1-red data-[state=active]:text-white">
+            <TabsTrigger value="drivers" className="flex items-center gap-2 rounded-full data-[state=active]:bg-f1-red data-[state=active]:text-white">
               <TrophyIcon className="h-4 w-4" />
               <span>Pořadí jezdců</span>
             </TabsTrigger>
-            <TabsTrigger value="constructors" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-f1-red data-[state=active]:text-white">
+            <TabsTrigger value="constructors" className="flex items-center gap-2 rounded-full data-[state=active]:bg-f1-red data-[state=active]:text-white">
               <CarIcon className="h-4 w-4" />
               <span>Pořadí týmů</span>
             </TabsTrigger>
