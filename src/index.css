@@ -92,6 +92,19 @@
 
     body {
         @apply bg-f1-dark text-foreground font-f1;
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior: none;
+    }
+
+    /* Improve mobile touch feel */
+    @media (max-width: 500px) {
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            @apply touch-manipulation;
+        }
     }
 }
 
@@ -104,6 +117,14 @@
     transform: translateY(-6px);
     box-shadow: 0 15px 30px -5px rgba(225, 6, 0, 0.15),
         0 10px 15px -6px rgba(225, 6, 0, 0.1);
+}
+
+/* Mobile tap effect for cards */
+@media (max-width: 500px) {
+    .race-card:active {
+        transform: translateY(0);
+        transition: transform 0.1s;
+    }
 }
 
 /* Custom scrollbar styling */
@@ -158,6 +179,91 @@
 
 .animate-slide-up {
     animation: slideUp 0.5s ease forwards;
+}
+
+/* App-like mobile UI styles */
+@media (max-width: 500px) {
+    /* Enhance taps with feedback */
+    button,
+    a {
+        transition: opacity 0.15s;
+    }
+
+    button:active,
+    a:active {
+        opacity: 0.7;
+    }
+
+    /* Bottom nav bar styles */
+    .bottom-nav-active {
+        position: relative;
+    }
+
+    .bottom-nav-active::after {
+        content: "";
+        position: absolute;
+        bottom: -3px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        background-color: #e10600;
+        border-radius: 50%;
+    }
+
+    /* Mobile-specific transitions */
+    .page-transition-enter {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    .page-transition-enter-active {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.3s, transform 0.3s;
+    }
+
+    /* Pull to refresh effect */
+    .pull-indicator {
+        height: 60px;
+        margin-top: -60px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        color: #e10600;
+        font-size: 0.75rem;
+    }
+
+    /* Smoother modal transitions */
+    [data-state="open"] {
+        animation: modal-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    [data-state="closed"] {
+        animation: modal-out 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes modal-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes modal-out {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+    }
 }
 
 /* Responsive typography */

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRaceSchedule, Race } from "@/services/f1Service";
 import { RaceCard } from "@/components/RaceCard";
@@ -13,6 +13,7 @@ const Index = () => {
   const { schedule, loading, error } = useRaceSchedule();
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>("calendar");
 
   // Handle race card click
   const handleRaceClick = (race: Race) => {
@@ -59,49 +60,63 @@ const Index = () => {
   const currentRaces = schedule.filter(isRaceCurrent);
   const upcomingRaces = schedule.filter(race => !isRacePast(race) && !isRaceCurrent(race));
 
+  // Handle tab change for mobile bottom navigation
+  useEffect(() => {
+    const handleTabChange = (tab: string) => {
+      setActiveTab(tab);
+    };
+
+    document.addEventListener("tabChange", (e: CustomEvent<{ tab: string }>) => handleTabChange(e.detail.tab));
+    return () => {
+      document.removeEventListener("tabChange", (e: CustomEvent<{ tab: string }>) => handleTabChange(e.detail.tab));
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-f1-dark to-[#1a1a1a] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-f1-dark to-[#1a1a1a] text-white relative flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-f1-dark to-[#1E1E1E] border-b border-gray-800">
-        <div className="container mx-auto py-6">
+      <header className="bg-gradient-to-r from-f1-dark to-[#1E1E1E] border-b border-gray-800 sticky top-0 z-10 backdrop-blur-md bg-opacity-80">
+        <div className="container mx-auto py-4 sm:py-6">
           <div className="flex flex-col items-center justify-center">
-            <h1 className="text-4xl font-bold tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
               <span className="text-f1-red">f1</span>.stvr.cz
             </h1>
-            <p className="text-gray-300 mt-2 text-lg">intuitivní kalendář závodů a výsledky</p>
+            <p className="text-gray-300 mt-1 sm:mt-2 text-sm sm:text-lg">intuitivní kalendář závodů a výsledky</p>
           </div>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="container mx-auto py-10 px-4 md:px-6">
-        <Tabs defaultValue="calendar" className="w-full">
-          <TabsList className="w-full md:w-auto bg-black/40 backdrop-blur-sm border border-gray-800 rounded-full mb-8 p-1">
-            <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-full data-[state=active]:bg-f1-red data-[state=active]:text-white">
-              <CalendarIcon className="h-4 w-4" />
-              <span>Kalendář závodů</span>
-            </TabsTrigger>
-            <TabsTrigger value="drivers" className="flex items-center gap-2 rounded-full data-[state=active]:bg-f1-red data-[state=active]:text-white">
-              <TrophyIcon className="h-4 w-4" />
-              <span>Pořadí jezdců</span>
-            </TabsTrigger>
-            <TabsTrigger value="constructors" className="flex items-center gap-2 rounded-full data-[state=active]:bg-f1-red data-[state=active]:text-white">
-              <CarIcon className="h-4 w-4" />
-              <span>Pořadí týmů</span>
-            </TabsTrigger>
-          </TabsList>
+      <main className="container mx-auto py-5 sm:py-10 px-3 sm:px-6 flex-1 pb-20 sm:pb-10 overflow-x-hidden">
+        <Tabs defaultValue="calendar" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Desktop Tabs */}
+          <div className="flex justify-center hidden sm:flex">
+            <TabsList className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-full mb-8 p-1 w-auto">
+              <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-full data-[state=active]:bg-f1-red data-[state=active]:text-white">
+                <CalendarIcon className="h-4 w-4" />
+                <span>Závody</span>
+              </TabsTrigger>
+              <TabsTrigger value="drivers" className="flex items-center gap-2 rounded-full data-[state=active]:bg-f1-red data-[state=active]:text-white">
+                <TrophyIcon className="h-4 w-4" />
+                <span>Jezdci</span>
+              </TabsTrigger>
+              <TabsTrigger value="constructors" className="flex items-center gap-2 rounded-full data-[state=active]:bg-f1-red data-[state=active]:text-white">
+                <CarIcon className="h-4 w-4" />
+                <span>Týmy</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* Race Calendar Tab */}
-          <TabsContent value="calendar">
+          <TabsContent value="calendar" className="mt-0">
             {error && (
-              <div className="p-6 rounded-xl bg-red-900/20 border border-red-900 text-center">
+              <div className="p-4 sm:p-6 rounded-xl bg-red-900/20 border border-red-900 text-center">
                 <p className="text-red-400">{error}</p>
                 <p className="text-gray-400 text-sm mt-1">Nepodařilo se načíst data o závodech. Zkuste to prosím později.</p>
               </div>
             )}
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
@@ -109,19 +124,19 @@ const Index = () => {
             ) : (
               <div>
                 {/* Season indicator */}
-                <div className="mb-8">
-                  <h2 className="text-3xl font-bold text-white">Sezóna Formule 1 2025</h2>
-                  <p className="text-gray-300">Kompletní kalendář závodů a výsledky</p>
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white">Sezóna 2025</h2>
+                  <p className="text-gray-300 text-sm sm:text-base">Kompletní kalendář závodů a výsledky</p>
                 </div>
 
                 {/* Current races section */}
                 {currentRaces.length > 0 && (
-                  <div className="mb-12">
-                    <h2 className="text-2xl font-semibold mb-6 flex items-center">
-                      <div className="w-1.5 h-8 bg-f1-red mr-3 rounded-full"></div>
+                  <div className="mb-8 sm:mb-12">
+                    <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center">
+                      <div className="w-1 sm:w-1.5 h-6 sm:h-8 bg-f1-red mr-2 sm:mr-3 rounded-full"></div>
                       Právě probíhá
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       {currentRaces.map((race) => (
                         <RaceCard
                           key={race.round}
@@ -136,12 +151,12 @@ const Index = () => {
 
                 {/* Upcoming races section */}
                 {upcomingRaces.length > 0 && (
-                  <div className="mb-12">
-                    <h2 className="text-2xl font-semibold mb-6 flex items-center">
-                      <div className="w-1.5 h-8 bg-f1-red mr-3 rounded-full"></div>
+                  <div className="mb-8 sm:mb-12">
+                    <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center">
+                      <div className="w-1 sm:w-1.5 h-6 sm:h-8 bg-f1-red mr-2 sm:mr-3 rounded-full"></div>
                       Nadcházející závody
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       {upcomingRaces.map((race) => (
                         <RaceCard
                           key={race.round}
@@ -157,11 +172,11 @@ const Index = () => {
                 {/* Past races section */}
                 {pastRaces.length > 0 && (
                   <div>
-                    <h2 className="text-2xl font-semibold mb-6 flex items-center">
-                      <div className="w-1.5 h-8 bg-gray-500 mr-3 rounded-full"></div>
+                    <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center">
+                      <div className="w-1 sm:w-1.5 h-6 sm:h-8 bg-gray-500 mr-2 sm:mr-3 rounded-full"></div>
                       Dokončené závody
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       {pastRaces.map((race) => (
                         <RaceCard
                           key={race.round}
@@ -176,7 +191,7 @@ const Index = () => {
 
                 {/* No races fallback */}
                 {!loading && !error && schedule.length === 0 && (
-                  <div className="text-center py-16 bg-black/20 rounded-xl border border-gray-800">
+                  <div className="text-center py-10 sm:py-16 bg-black/20 rounded-xl border border-gray-800">
                     <p className="text-gray-300">Pro sezónu 2025 zatím nejsou k dispozici žádná data o závodech.</p>
                   </div>
                 )}
@@ -185,18 +200,18 @@ const Index = () => {
           </TabsContent>
 
           {/* Driver Standings Tab */}
-          <TabsContent value="drivers">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center">
-              <div className="w-1.5 h-8 bg-f1-red mr-3 rounded-full"></div>
+          <TabsContent value="drivers" className="mt-0">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center">
+              <div className="w-1 sm:w-1.5 h-6 sm:h-8 bg-f1-red mr-2 sm:mr-3 rounded-full"></div>
               Šampionát jezdců 2025
             </h2>
             <DriverStandingsTable />
           </TabsContent>
 
           {/* Constructor Standings Tab */}
-          <TabsContent value="constructors">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center">
-              <div className="w-1.5 h-8 bg-f1-red mr-3 rounded-full"></div>
+          <TabsContent value="constructors" className="mt-0">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center">
+              <div className="w-1 sm:w-1.5 h-6 sm:h-8 bg-f1-red mr-2 sm:mr-3 rounded-full"></div>
               Pohár konstruktérů 2025
             </h2>
             <ConstructorStandingsTable />
@@ -204,8 +219,35 @@ const Index = () => {
         </Tabs>
       </main>
 
+      {/* Mobile bottom navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/80 border-t border-gray-800 backdrop-blur-md sm:hidden z-20">
+        <div className="flex justify-around items-center py-3 px-2">
+          <button
+            onClick={() => setActiveTab("calendar")}
+            className={`flex flex-col items-center justify-center w-20 ${activeTab === 'calendar' ? 'text-f1-red bottom-nav-active' : 'text-gray-400'}`}
+          >
+            <CalendarIcon className="h-5 w-5 mb-1" />
+            <span className="text-xs">Závody</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("drivers")}
+            className={`flex flex-col items-center justify-center w-20 ${activeTab === 'drivers' ? 'text-f1-red bottom-nav-active' : 'text-gray-400'}`}
+          >
+            <TrophyIcon className="h-5 w-5 mb-1" />
+            <span className="text-xs">Jezdci</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("constructors")}
+            className={`flex flex-col items-center justify-center w-20 ${activeTab === 'constructors' ? 'text-f1-red bottom-nav-active' : 'text-gray-400'}`}
+          >
+            <CarIcon className="h-5 w-5 mb-1" />
+            <span className="text-xs">Týmy</span>
+          </button>
+        </div>
+      </div>
+
       {/* Footer */}
-      <footer className="bg-black/40 backdrop-blur-sm border-t border-gray-800 py-6 mt-10">
+      <footer className="bg-black/40 backdrop-blur-sm border-t border-gray-800 py-4 sm:py-6 hidden sm:block">
         <div className="container mx-auto text-center">
           <p className="text-gray-300 text-sm">
             Data poskytuje <a href="https://ergast.com/mrd/" target="_blank" rel="noopener noreferrer" className="text-f1-red hover:underline">Ergast F1 API</a>

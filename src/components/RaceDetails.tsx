@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchRaceResults, Race } from "@/services/f1Service";
 import { format, parseISO, isValid, isWithinInterval, isSameDay } from "date-fns";
 import { cs } from "date-fns/locale";
-import { CalendarIcon, MapPinIcon, FlagIcon, ClockIcon, TrophyIcon, InfoIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, FlagIcon, ClockIcon, TrophyIcon, InfoIcon, XIcon } from "lucide-react";
 
 interface RaceDetailsProps {
   race: Race | null;
@@ -141,7 +141,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
         formattedDateRange = format(startDate, "EEEE d. MMMM yyyy", { locale: cs });
       } else {
         const startStr = format(startDate, "d.", { locale: cs });
-        const endStr = format(endDate, "EEEE d. MMMM yyyy", { locale: cs });
+        const endStr = format(endDate, "d. MMMM yyyy", { locale: cs });
         formattedDateRange = `${startStr} - ${endStr}`;
       }
     }
@@ -151,46 +151,50 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={`bg-gradient-to-b from-f1-dark to-[#1a1a1a] text-white border-gray-800 max-w-3xl rounded-xl ${status === 'current' ? 'bg-f1-red/20' : ''}`}>
-        <DialogHeader>
-          <div className="flex justify-between items-start">
+      <DialogContent className={`bg-gradient-to-b from-f1-dark to-[#1a1a1a] text-white border-gray-800 max-w-3xl rounded-xl sm:rounded-xl max-h-[95vh] md:max-h-[85vh] overflow-auto p-4 sm:p-6 ${status === 'current' ? 'bg-f1-red/20' : ''}`}>
+        <DialogClose className="absolute right-4 top-4 rounded-full p-2 bg-black/40 text-gray-400 hover:text-white">
+          <XIcon className="h-4 w-4" />
+        </DialogClose>
+
+        <DialogHeader className="">
+          <div className="flex flex-row justify-between items-start pr-8">
             <div>
               <Badge className={`${className} text-white mb-2`}>
                 {label}
               </Badge>
-              <DialogTitle className="text-2xl font-bold">{race.raceName}</DialogTitle>
-              <p className="text-gray-300 mt-1">{race.Circuit.circuitName}</p>
+              <DialogTitle className="text-xl sm:text-2xl font-bold leading-tight">{race.raceName}</DialogTitle>
+              <p className="text-gray-300 mt-1 text-sm sm:text-base">{race.Circuit.circuitName}</p>
             </div>
-            <Badge className="bg-f1-red">Kolo {race.round}</Badge>
+            <Badge className="bg-f1-red hidden sm:block">Kolo {race.round}</Badge>
           </div>
         </DialogHeader>
 
-        <div className="flex items-center mb-4 text-gray-300 bg-black/20 rounded-md p-2.5">
-          <CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />
-          <span>{formattedDateRange}</span>
+        <div className="flex items-center text-gray-300 bg-black/20 rounded-md p-2.5 text-sm mb-2 -mt-1">
+          <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 text-gray-400 flex-shrink-0" />
+          <span className="line-clamp-1">{formattedDateRange}</span>
         </div>
 
-        <Tabs defaultValue="schedule" className="mt-4">
-          <TabsList className="bg-black/40 border border-gray-800 rounded-lg mb-4 p-1">
-            <TabsTrigger value="schedule" className="rounded-md data-[state=active]:bg-f1-red data-[state=active]:text-white">
-              <ClockIcon className="h-4 w-4 mr-1.5" />
-              Program
+        <Tabs defaultValue="schedule">
+          <TabsList className="bg-black/40 border border-gray-800 rounded-lg mb-4 p-1 w-full flex">
+            <TabsTrigger value="schedule" className="flex-1 rounded-md text-xs sm:text-sm data-[state=active]:bg-f1-red data-[state=active]:text-white">
+              <ClockIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+              <span className="block">Program</span>
             </TabsTrigger>
-            <TabsTrigger value="circuit" className="rounded-md data-[state=active]:bg-f1-red data-[state=active]:text-white">
-              <MapPinIcon className="h-4 w-4 mr-1.5" />
-              Okruh
+            <TabsTrigger value="circuit" className="flex-1 rounded-md text-xs sm:text-sm data-[state=active]:bg-f1-red data-[state=active]:text-white">
+              <MapPinIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+              <span className="block">Okruh</span>
             </TabsTrigger>
             {status === "past" && (
-              <TabsTrigger value="results" className="rounded-md data-[state=active]:bg-f1-red data-[state=active]:text-white">
-                <TrophyIcon className="h-4 w-4 mr-1.5" />
-                Výsledky
+              <TabsTrigger value="results" className="flex-1 rounded-md text-xs sm:text-sm data-[state=active]:bg-f1-red data-[state=active]:text-white">
+                <TrophyIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                <span className="block">Výsledky</span>
               </TabsTrigger>
             )}
           </TabsList>
 
           <TabsContent value="schedule">
-            <h4 className="font-semibold text-lg mb-4">Program závodního víkendu</h4>
-            <div className="space-y-3">
+            <h4 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4">Program závodního víkendu</h4>
+            <div className="">
               {race.FirstPractice && (
                 <EventItem
                   title="1. trénink"
@@ -248,83 +252,75 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="circuit">
-            <h4 className="font-semibold text-lg mb-4">Informace o okruhu</h4>
+          <TabsContent value="circuit" className="pt-1">
+            <h4 className="font-semibold text-base sm:text-lg mb-4">Informace o okruhu</h4>
             <div className="space-y-4">
-              <div className="bg-black/20 rounded-lg p-4 flex items-center gap-3">
-                <div className="bg-gray-800 p-2 rounded-md">
-                  <MapPinIcon className="h-5 w-5 text-gray-300" />
+              <div className="bg-black/20 rounded-lg p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                <div className="bg-gray-800 p-2 rounded-md flex-shrink-0">
+                  <MapPinIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300" />
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Lokalita</p>
-                  <p className="font-medium">{race.Circuit.Location.locality}, {race.Circuit.Location.country}</p>
+                  <p className="text-gray-400 text-xs sm:text-sm">Lokalita</p>
+                  <p className="font-medium text-sm sm:text-base">{race.Circuit.Location.locality}, {race.Circuit.Location.country}</p>
                 </div>
               </div>
 
-              <div className="bg-black/20 rounded-lg p-4 flex items-center gap-3">
-                <div className="bg-gray-800 p-2 rounded-md">
-                  <InfoIcon className="h-5 w-5 text-gray-300" />
+              <div className="bg-black/20 rounded-lg p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                <div className="bg-gray-800 p-2 rounded-md flex-shrink-0">
+                  <InfoIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300" />
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Oficiální stránky</p>
+                  <p className="text-gray-400 text-xs sm:text-sm">Oficiální stránky</p>
                   <a
                     href={race.Circuit.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-f1-red hover:underline font-medium"
+                    className="text-f1-red hover:underline font-medium text-sm sm:text-base"
                   >
                     Navštívit stránky
                   </a>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <p className="text-gray-300 mb-3 font-medium">Mapa okruhu</p>
-                <div className="aspect-video bg-black/30 rounded-lg border border-gray-800 flex items-center justify-center overflow-hidden">
-                  <div className="text-center p-6">
-                    <MapPinIcon className="h-8 w-8 text-gray-600 mx-auto mb-2" />
-                    <p className="text-gray-500">Vizualizace okruhu by se zobrazila zde</p>
-                  </div>
                 </div>
               </div>
             </div>
           </TabsContent>
 
           {status === "past" && (
-            <TabsContent value="results">
-              <h4 className="font-semibold text-lg mb-4">Výsledky závodu</h4>
-              {loading && <p className="text-gray-400">Načítání výsledků...</p>}
-              {error && <p className="text-red-400">{error}</p>}
+            <TabsContent value="results" className="pt-1">
+              <h4 className="font-semibold text-base sm:text-lg mb-4">Výsledky závodu</h4>
+              {loading && <p className="text-gray-400 text-sm sm:text-base">Načítání výsledků...</p>}
+              {error && <p className="text-red-400 text-sm sm:text-base">{error}</p>}
               {!loading && !error && !raceResults && (
-                <p className="text-gray-400">Výsledky zatím nejsou k dispozici</p>
+                <p className="text-gray-400 text-sm sm:text-base">Výsledky zatím nejsou k dispozici</p>
               )}
               {!loading && !error && raceResults && raceResults.Results && (
-                <div className="overflow-x-auto bg-black/20 rounded-lg border border-gray-800">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-800">
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Poz</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Jezdec</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Tým</th>
-                        <th className="text-right py-3 px-4 text-gray-400 font-medium">Čas/Rozdíl</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {raceResults.Results.map((result: RaceResult) => (
-                        <tr key={result.position} className="border-b border-gray-800 last:border-0 hover:bg-white/5">
-                          <td className="py-3 px-4">{result.position}</td>
-                          <td className="py-3 px-4">
-                            <span className="font-bold mr-2 text-white">{result.Driver.code}</span>
-                            {result.Driver.givenName} {result.Driver.familyName}
-                          </td>
-                          <td className="py-3 px-4">{result.Constructor.name}</td>
-                          <td className="py-3 px-4 text-right">
-                            {result.Time ? result.Time.time : (result.status || 'DNF')}
-                          </td>
+                <div className="overflow-x-auto -mx-4 sm:mx-0 bg-black/20 rounded-lg border border-gray-800">
+                  <div className="min-w-[480px]">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-800">
+                          <th className="text-left py-2 px-3 sm:py-3 sm:px-4 text-gray-400 text-xs sm:text-sm font-medium">Poz</th>
+                          <th className="text-left py-2 px-3 sm:py-3 sm:px-4 text-gray-400 text-xs sm:text-sm font-medium">Jezdec</th>
+                          <th className="text-left py-2 px-3 sm:py-3 sm:px-4 text-gray-400 text-xs sm:text-sm font-medium">Tým</th>
+                          <th className="text-right py-2 px-3 sm:py-3 sm:px-4 text-gray-400 text-xs sm:text-sm font-medium">Čas/Rozdíl</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {raceResults.Results.map((result: RaceResult) => (
+                          <tr key={result.position} className="border-b border-gray-800 last:border-0 hover:bg-white/5">
+                            <td className="py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm">{result.position}</td>
+                            <td className="py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm">
+                              <span className="font-bold mr-1 sm:mr-2 text-white">{result.Driver.code}</span>
+                              {result.Driver.givenName} {result.Driver.familyName}
+                            </td>
+                            <td className="py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm">{result.Constructor.name}</td>
+                            <td className="py-2 px-3 sm:py-3 sm:px-4 text-right text-xs sm:text-sm">
+                              {result.Time ? result.Time.time : (result.status || 'DNF')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -368,25 +364,20 @@ function EventItem({ title, date, time, highlight = false }: {
   };
 
   const isCurrent = isCurrentEvent();
-
   return (
-    <div className={`flex justify-between items-center p-3 rounded-lg ${isCurrent ? 'bg-f1-red/20 border border-f1-red/20' :
-      highlight ? 'bg-f1-red/10 border border-f1-red/20' :
-        'bg-black/20 border border-gray-800'
-      }`}>
-      <div className="flex items-center">
-        <div className={`w-1.5 h-10 ${isCurrent ? 'bg-f1-red' :
-          highlight ? 'bg-f1-red' :
-            'bg-gray-600'
-          } rounded-full mr-3`}></div>
-        <span className={`font-medium ${isCurrent ? 'text-f1-red' :
+    <div className={`flex justify-between items-center p-3 ${isCurrent ? 'bg-gradient-to-r from-f1-red/10 to-f1-red/5 border-l-2 border-l-f1-red' :
+      highlight ? 'bg-gradient-to-r from-f1-red/5 to-transparent border-l-2 border-l-f1-red' :
+        'bg-black/10 border-l-2 border-l-gray-700'
+      } first:rounded-t-lg last:rounded-b-lg border-b border-b-gray-800/50`}>
+      <div className="flex items-center gap-3">
+        <span className={`font-medium text-sm sm:text-base ${isCurrent ? 'text-f1-red' :
           highlight ? 'text-f1-red' :
             'text-white'
           }`}>{title}</span>
       </div>
       <div className="text-right">
-        <span className="block text-sm text-gray-400">{formattedDate}</span>
-        <span className="block text-sm font-medium">{formattedTime}</span>
+        <span className="block text-xs sm:text-sm text-gray-400">{formattedDate}</span>
+        <span className="block text-xs sm:text-sm font-medium text-gray-200">{formattedTime}</span>
       </div>
     </div>
   );
