@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => ({
                 name: "f1.stvr.cz by steveruu",
                 short_name: "f1.stvr.cz",
                 description: "Kompletní kalendář závodů a výsledky",
-                theme_color: "#ffffff",
+                theme_color: "#000000",
                 icons: [
                     {
                         src: "pwa-192x192.png",
