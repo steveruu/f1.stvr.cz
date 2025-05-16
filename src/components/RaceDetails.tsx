@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchRaceResults, Race } from "@/services/f1Service";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
 interface RaceDetailsProps {
@@ -24,19 +24,23 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
       if (!race) return;
       
       // Check if the race date has passed to fetch results
-      const today = new Date();
-      const raceDate = new Date(`${race.date}T${race.time || '00:00:00Z'}`);
-      
-      if (raceDate < today) {
-        try {
-          setLoading(true);
-          const results = await fetchRaceResults(race.season, race.round);
-          setRaceResults(results);
-          setLoading(false);
-        } catch (err) {
-          setError("Unable to fetch race results");
-          setLoading(false);
+      try {
+        const today = new Date();
+        const raceDate = parseISO(`${race.date}T${race.time || '00:00:00Z'}`);
+        
+        if (isValid(raceDate) && raceDate < today) {
+          try {
+            setLoading(true);
+            const results = await fetchRaceResults(race.season, race.round);
+            setRaceResults(results);
+            setLoading(false);
+          } catch (err) {
+            setError("Unable to fetch race results");
+            setLoading(false);
+          }
         }
+      } catch (err) {
+        console.error("Error parsing race date:", err);
       }
     };
 
@@ -47,14 +51,28 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
 
   if (!race) return null;
 
-  // Format dates for display
-  const raceDate = parseISO(`${race.date}T${race.time || '00:00:00Z'}`);
-  const formattedDate = format(raceDate, "EEEE, MMMM d, yyyy");
-  const formattedTime = race.time ? format(raceDate, "h:mm a") : 'TBA';
-
-  // Check if race is in the past
-  const today = new Date();
-  const isPast = raceDate < today;
+  // Format dates for display safely
+  let formattedDate = "TBA";
+  let formattedTime = "TBA";
+  let isPast = false;
+  
+  try {
+    if (race.date) {
+      const dateStr = `${race.date}T${race.time || '00:00:00Z'}`;
+      const raceDate = parseISO(dateStr);
+      
+      if (isValid(raceDate)) {
+        formattedDate = format(raceDate, "EEEE, MMMM d, yyyy");
+        formattedTime = race.time ? format(raceDate, "h:mm a") : 'TBA';
+        
+        // Check if race is in the past
+        const today = new Date();
+        isPast = raceDate < today;
+      }
+    }
+  } catch (error) {
+    console.error("Error formatting race date:", error);
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -169,9 +187,34 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
               {!loading && !error && !raceResults && (
                 <p className="text-gray-400">No results available yet</p>
               )}
-              {!loading && !error && raceResults && (
-                <p className="text-gray-400">Results would be displayed here</p>
-                // In a real implementation, we would map through raceResults and display them
+              {!loading && !error && raceResults && raceResults.Results && (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-700">
+                        <th className="text-left py-2 px-2">Pos</th>
+                        <th className="text-left py-2 px-2">Driver</th>
+                        <th className="text-left py-2 px-2">Team</th>
+                        <th className="text-right py-2 px-2">Time/Gap</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {raceResults.Results.map((result: any) => (
+                        <tr key={result.position} className="border-b border-gray-800">
+                          <td className="py-2 px-2">{result.position}</td>
+                          <td className="py-2 px-2">
+                            <span className="font-bold mr-1">{result.Driver.code}</span>
+                            {result.Driver.givenName} {result.Driver.familyName}
+                          </td>
+                          <td className="py-2 px-2">{result.Constructor.name}</td>
+                          <td className="py-2 px-2 text-right">
+                            {result.Time ? result.Time.time : (result.status || 'DNF')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </TabsContent>
           )}
@@ -183,11 +226,20 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
 
 // Helper component for schedule items
 function EventItem({ title, date, time, highlight = false }) {
-  if (!date) return null;
+  let formattedDate = "TBA";
+  let formattedTime = "TBA";
   
-  const eventDate = parseISO(`${date}T${time || '00:00:00Z'}`);
-  const formattedDate = format(eventDate, "E, MMM d");
-  const formattedTime = time ? format(eventDate, "h:mm a") : 'TBA';
+  try {
+    if (date) {
+      const eventDate = parseISO(`${date}T${time || '00:00:00Z'}`);
+      if (isValid(eventDate)) {
+        formattedDate = format(eventDate, "E, MMM d");
+        formattedTime = time ? format(eventDate, "h:mm a") : 'TBA';
+      }
+    }
+  } catch (error) {
+    console.error("Error formatting event date:", error);
+  }
 
   return (
     <div className={`flex justify-between items-center p-3 rounded ${highlight ? 'bg-f1-red bg-opacity-10 border border-f1-red border-opacity-20' : 'bg-f1-dark'}`}>

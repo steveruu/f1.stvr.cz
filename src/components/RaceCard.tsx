@@ -1,7 +1,6 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import type { Race } from "@/services/f1Service";
 import { CalendarIcon } from "lucide-react";
 
@@ -12,10 +11,25 @@ interface RaceCardProps {
 }
 
 export function RaceCard({ race, onClick, isPast }: RaceCardProps) {
-  // Format date for display
-  const raceDate = parseISO(`${race.date}T${race.time || '00:00:00Z'}`);
-  const formattedDate = format(raceDate, "MMM d, yyyy");
-  const formattedTime = race.time ? format(raceDate, "h:mm a") : 'TBA';
+  // Format date for display, handling potential invalid dates
+  let formattedDate = "TBA";
+  let formattedTime = "TBA";
+  
+  try {
+    if (race.date) {
+      // Parse and validate the date
+      const dateStr = `${race.date}T${race.time || '00:00:00Z'}`;
+      const raceDate = parseISO(dateStr);
+      
+      if (isValid(raceDate)) {
+        formattedDate = format(raceDate, "MMM d, yyyy");
+        formattedTime = race.time ? format(raceDate, "h:mm a") : 'TBA';
+      }
+    }
+  } catch (error) {
+    console.error("Error formatting race date:", error);
+    // Keep default values if parsing fails
+  }
 
   return (
     <Card 
