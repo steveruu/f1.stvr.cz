@@ -1,24 +1,33 @@
+
 import { useState, useEffect } from 'react';
 
 // Types for F1 data
 export interface Race {
-  season: string;
-  round: string;
-  url: string;
-  raceName: string;
-  Circuit: {
-    circuitId: string;
-    url: string;
-    circuitName: string;
-    Location: {
-      lat: string;
-      long: string;
-      locality: string;
-      country: string;
+  meeting_key?: number;
+  meeting_name?: string;
+  meeting_official_name?: string;
+  country_code?: string;
+  country_name?: string;
+  circuit_key?: number;
+  circuit_short_name?: string;
+  date_start?: string;
+  date?: string;
+  time?: string;
+  season?: string;
+  round?: string;
+  url?: string;
+  raceName?: string;
+  Circuit?: {
+    circuitId?: string;
+    url?: string;
+    circuitName?: string;
+    Location?: {
+      lat?: string;
+      long?: string;
+      locality?: string;
+      country?: string;
     };
   };
-  date: string;
-  time: string;
   FirstPractice?: { date: string; time: string };
   SecondPractice?: { date: string; time: string };
   ThirdPractice?: { date: string; time: string };
@@ -32,37 +41,53 @@ export interface RaceSchedule {
 }
 
 export interface Driver {
-  driverId: string;
-  permanentNumber: string;
-  code: string;
-  url: string;
-  givenName: string;
-  familyName: string;
-  dateOfBirth: string;
-  nationality: string;
+  driver_number?: string;
+  broadcast_name?: string;
+  full_name?: string;
+  name_acronym?: string;
+  team_name?: string;
+  team_color?: string;
+  first_name?: string;
+  last_name?: string;
+  country_code?: string;
+  
+  // Compatibility with previous interface
+  driverId?: string;
+  permanentNumber?: string;
+  code?: string;
+  url?: string;
+  givenName?: string;
+  familyName?: string;
+  dateOfBirth?: string;
+  nationality?: string;
 }
 
 export interface Constructor {
-  constructorId: string;
-  url: string;
-  name: string;
-  nationality: string;
+  team_name?: string;
+  team_color?: string;
+  country_code?: string;
+  
+  // Compatibility with previous interface
+  constructorId?: string;
+  url?: string;
+  name?: string;
+  nationality?: string;
 }
 
 export interface DriverStanding {
-  position: string;
-  positionText: string;
-  points: string;
-  wins: string;
+  position?: string;
+  positionText?: string;
+  points?: string;
+  wins?: string;
   Driver: Driver;
-  Constructors: Constructor[];
+  Constructors?: Constructor[];
 }
 
 export interface ConstructorStanding {
-  position: string;
-  positionText: string;
-  points: string;
-  wins: string;
+  position?: string;
+  positionText?: string;
+  points?: string;
+  wins?: string;
   Constructor: Constructor;
 }
 
@@ -78,431 +103,40 @@ export interface ConstructorStandingsResponse {
   ConstructorStandings: ConstructorStanding[];
 }
 
-// Base URL for Ergast F1 API
-const BASE_URL = 'https://ergast.com/api/f1';
+export interface SessionResult {
+  position?: number;
+  driver_number?: string;
+  broadcast_name?: string;
+  name_acronym?: string;
+  team_name?: string;
+  team_color?: string;
+  lap_time?: string;
+  gap_to_leader?: string;
+  interval_to_position_ahead?: string;
+  laps?: number;
+}
+
+// Base URLs for F1 APIs
+const OPENF1_BASE_URL = 'https://api.openf1.org/v1';
 const CURRENT_YEAR = '2025';
 
-// Mock data for 2025 season since the real API has no data yet
-const MOCK_RACES: Race[] = [
-  {
-    season: "2025",
-    round: "1",
-    url: "https://en.wikipedia.org/wiki/2025_Bahrain_Grand_Prix",
-    raceName: "Bahrain Grand Prix",
-    Circuit: {
-      circuitId: "bahrain",
-      url: "http://en.wikipedia.org/wiki/Bahrain_International_Circuit",
-      circuitName: "Bahrain International Circuit",
-      Location: {
-        lat: "26.0325",
-        long: "50.5106",
-        locality: "Sakhir",
-        country: "Bahrain"
-      }
-    },
-    date: "2025-03-08",
-    time: "15:00:00Z",
-    FirstPractice: { date: "2025-03-06", time: "11:30:00Z" },
-    SecondPractice: { date: "2025-03-06", time: "15:00:00Z" },
-    ThirdPractice: { date: "2025-03-07", time: "12:30:00Z" },
-    Qualifying: { date: "2025-03-07", time: "16:00:00Z" }
-  },
-  {
-    season: "2025",
-    round: "2",
-    url: "https://en.wikipedia.org/wiki/2025_Saudi_Arabian_Grand_Prix",
-    raceName: "Saudi Arabian Grand Prix",
-    Circuit: {
-      circuitId: "jeddah",
-      url: "http://en.wikipedia.org/wiki/Jeddah_Street_Circuit",
-      circuitName: "Jeddah Corniche Circuit",
-      Location: {
-        lat: "21.6319",
-        long: "39.1044",
-        locality: "Jeddah",
-        country: "Saudi Arabia"
-      }
-    },
-    date: "2025-03-15",
-    time: "18:00:00Z",
-    FirstPractice: { date: "2025-03-13", time: "14:30:00Z" },
-    SecondPractice: { date: "2025-03-13", time: "18:00:00Z" },
-    ThirdPractice: { date: "2025-03-14", time: "14:30:00Z" },
-    Qualifying: { date: "2025-03-14", time: "18:00:00Z" }
-  },
-  {
-    season: "2025",
-    round: "3",
-    url: "https://en.wikipedia.org/wiki/2025_Australian_Grand_Prix",
-    raceName: "Australian Grand Prix",
-    Circuit: {
-      circuitId: "albert_park",
-      url: "http://en.wikipedia.org/wiki/Melbourne_Grand_Prix_Circuit",
-      circuitName: "Albert Park Circuit",
-      Location: {
-        lat: "-37.8497",
-        long: "144.968",
-        locality: "Melbourne",
-        country: "Australia"
-      }
-    },
-    date: "2025-03-29",
-    time: "06:00:00Z",
-    FirstPractice: { date: "2025-03-27", time: "02:30:00Z" },
-    SecondPractice: { date: "2025-03-27", time: "06:00:00Z" },
-    ThirdPractice: { date: "2025-03-28", time: "03:00:00Z" },
-    Qualifying: { date: "2025-03-28", time: "06:00:00Z" }
-  },
-  {
-    season: "2025",
-    round: "4",
-    url: "https://en.wikipedia.org/wiki/2025_Japanese_Grand_Prix",
-    raceName: "Japanese Grand Prix",
-    Circuit: {
-      circuitId: "suzuka",
-      url: "http://en.wikipedia.org/wiki/Suzuka_Circuit",
-      circuitName: "Suzuka Circuit",
-      Location: {
-        lat: "34.8431",
-        long: "136.541",
-        locality: "Suzuka",
-        country: "Japan"
-      }
-    },
-    date: "2025-04-12",
-    time: "06:00:00Z",
-    FirstPractice: { date: "2025-04-10", time: "03:30:00Z" },
-    SecondPractice: { date: "2025-04-10", time: "07:00:00Z" },
-    ThirdPractice: { date: "2025-04-11", time: "03:30:00Z" },
-    Qualifying: { date: "2025-04-11", time: "07:00:00Z" }
-  },
-  {
-    season: "2025",
-    round: "5",
-    url: "https://en.wikipedia.org/wiki/2025_Chinese_Grand_Prix",
-    raceName: "Chinese Grand Prix",
-    Circuit: {
-      circuitId: "shanghai",
-      url: "http://en.wikipedia.org/wiki/Shanghai_International_Circuit",
-      circuitName: "Shanghai International Circuit",
-      Location: {
-        lat: "31.3389",
-        long: "121.22",
-        locality: "Shanghai",
-        country: "China"
-      }
-    },
-    date: "2025-04-19",
-    time: "08:00:00Z",
-    FirstPractice: { date: "2025-04-17", time: "04:30:00Z" },
-    SecondPractice: { date: "2025-04-17", time: "08:00:00Z" },
-    Sprint: { date: "2025-04-18", time: "05:00:00Z" },
-    Qualifying: { date: "2025-04-18", time: "09:00:00Z" }
-  },
-  {
-    season: "2025",
-    round: "6",
-    url: "https://en.wikipedia.org/wiki/2025_Miami_Grand_Prix",
-    raceName: "Miami Grand Prix",
-    Circuit: {
-      circuitId: "miami",
-      url: "http://en.wikipedia.org/wiki/Miami_International_Autodrome",
-      circuitName: "Miami International Autodrome",
-      Location: {
-        lat: "25.9581",
-        long: "-80.2389",
-        locality: "Miami",
-        country: "USA"
-      }
-    },
-    date: "2025-05-03",
-    time: "20:00:00Z",
-    FirstPractice: { date: "2025-05-01", time: "17:30:00Z" },
-    Qualifying: { date: "2025-05-01", time: "21:00:00Z" },
-    SecondPractice: { date: "2025-05-02", time: "17:30:00Z" },
-    Sprint: { date: "2025-05-02", time: "21:00:00Z" }
-  },
-  {
-    season: "2025",
-    round: "7",
-    url: "https://en.wikipedia.org/wiki/2025_Emilia_Romagna_Grand_Prix",
-    raceName: "Emilia Romagna Grand Prix",
-    Circuit: {
-      circuitId: "imola",
-      url: "http://en.wikipedia.org/wiki/Autodromo_Enzo_e_Dino_Ferrari",
-      circuitName: "Autodromo Internazionale Enzo e Dino Ferrari",
-      Location: {
-        lat: "44.3439",
-        long: "11.7167",
-        locality: "Imola",
-        country: "Italy"
-      }
-    },
-    date: "2025-05-17",
-    time: "14:00:00Z",
-    FirstPractice: { date: "2025-05-15", time: "12:30:00Z" },
-    SecondPractice: { date: "2025-05-15", time: "16:00:00Z" },
-    ThirdPractice: { date: "2025-05-16", time: "11:30:00Z" },
-    Qualifying: { date: "2025-05-16", time: "15:00:00Z" }
-  },
-  {
-    season: "2025",
-    round: "8",
-    url: "https://en.wikipedia.org/wiki/2025_Monaco_Grand_Prix",
-    raceName: "Monaco Grand Prix",
-    Circuit: {
-      circuitId: "monaco",
-      url: "http://en.wikipedia.org/wiki/Circuit_de_Monaco",
-      circuitName: "Circuit de Monaco",
-      Location: {
-        lat: "43.7347",
-        long: "7.42056",
-        locality: "Monte-Carlo",
-        country: "Monaco"
-      }
-    },
-    date: "2025-05-24",
-    time: "14:00:00Z",
-    FirstPractice: { date: "2025-05-22", time: "12:30:00Z" },
-    SecondPractice: { date: "2025-05-22", time: "16:00:00Z" },
-    ThirdPractice: { date: "2025-05-23", time: "11:30:00Z" },
-    Qualifying: { date: "2025-05-23", time: "15:00:00Z" }
-  },
-  {
-    season: "2025",
-    round: "9",
-    url: "https://en.wikipedia.org/wiki/2025_Canadian_Grand_Prix",
-    raceName: "Canadian Grand Prix",
-    Circuit: {
-      circuitId: "villeneuve",
-      url: "http://en.wikipedia.org/wiki/Circuit_Gilles_Villeneuve",
-      circuitName: "Circuit Gilles Villeneuve",
-      Location: {
-        lat: "45.5",
-        long: "-73.5228",
-        locality: "Montreal",
-        country: "Canada"
-      }
-    },
-    date: "2025-06-07",
-    time: "18:00:00Z",
-    FirstPractice: { date: "2025-06-05", time: "17:30:00Z" },
-    SecondPractice: { date: "2025-06-05", time: "21:00:00Z" },
-    ThirdPractice: { date: "2025-06-06", time: "16:30:00Z" },
-    Qualifying: { date: "2025-06-06", time: "20:00:00Z" }
-  },
-  {
-    season: "2025",
-    round: "10",
-    url: "https://en.wikipedia.org/wiki/2025_Spanish_Grand_Prix",
-    raceName: "Spanish Grand Prix",
-    Circuit: {
-      circuitId: "catalunya",
-      url: "http://en.wikipedia.org/wiki/Circuit_de_Barcelona-Catalunya",
-      circuitName: "Circuit de Barcelona-Catalunya",
-      Location: {
-        lat: "41.57",
-        long: "2.26111",
-        locality: "Montmeló",
-        country: "Spain"
-      }
-    },
-    date: "2025-06-21",
-    time: "14:00:00Z",
-    FirstPractice: { date: "2025-06-19", time: "12:30:00Z" },
-    SecondPractice: { date: "2025-06-19", time: "16:00:00Z" },
-    ThirdPractice: { date: "2025-06-20", time: "11:30:00Z" },
-    Qualifying: { date: "2025-06-20", time: "15:00:00Z" }
-  }
-];
+// Helper function to format date
+const formatDate = (dateString: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+};
 
-// Mock driver standings
-const MOCK_DRIVER_STANDINGS: DriverStanding[] = [
-  {
-    position: "1",
-    positionText: "1",
-    points: "103",
-    wins: "3",
-    Driver: {
-      driverId: "max_verstappen",
-      permanentNumber: "1",
-      code: "VER",
-      url: "http://en.wikipedia.org/wiki/Max_Verstappen",
-      givenName: "Max",
-      familyName: "Verstappen",
-      dateOfBirth: "1997-09-30",
-      nationality: "Dutch"
-    },
-    Constructors: [
-      {
-        constructorId: "red_bull",
-        url: "http://en.wikipedia.org/wiki/Red_Bull_Racing",
-        name: "Red Bull",
-        nationality: "Austrian"
-      }
-    ]
-  },
-  {
-    position: "2",
-    positionText: "2",
-    points: "96",
-    wins: "2",
-    Driver: {
-      driverId: "charles_leclerc",
-      permanentNumber: "16",
-      code: "LEC",
-      url: "http://en.wikipedia.org/wiki/Charles_Leclerc",
-      givenName: "Charles",
-      familyName: "Leclerc",
-      dateOfBirth: "1997-10-16",
-      nationality: "Monegasque"
-    },
-    Constructors: [
-      {
-        constructorId: "ferrari",
-        url: "http://en.wikipedia.org/wiki/Scuderia_Ferrari",
-        name: "Ferrari",
-        nationality: "Italian"
-      }
-    ]
-  },
-  {
-    position: "3",
-    positionText: "3",
-    points: "85",
-    wins: "1",
-    Driver: {
-      driverId: "lando_norris",
-      permanentNumber: "4",
-      code: "NOR",
-      url: "http://en.wikipedia.org/wiki/Lando_Norris",
-      givenName: "Lando",
-      familyName: "Norris",
-      dateOfBirth: "1999-11-13",
-      nationality: "British"
-    },
-    Constructors: [
-      {
-        constructorId: "mclaren",
-        url: "http://en.wikipedia.org/wiki/McLaren",
-        name: "McLaren",
-        nationality: "British"
-      }
-    ]
-  },
-  {
-    position: "4",
-    positionText: "4",
-    points: "76",
-    wins: "0",
-    Driver: {
-      driverId: "george_russell",
-      permanentNumber: "63",
-      code: "RUS",
-      url: "http://en.wikipedia.org/wiki/George_Russell_(racing_driver)",
-      givenName: "George",
-      familyName: "Russell",
-      dateOfBirth: "1998-02-15",
-      nationality: "British"
-    },
-    Constructors: [
-      {
-        constructorId: "mercedes",
-        url: "http://en.wikipedia.org/wiki/Mercedes-Benz_in_Formula_One",
-        name: "Mercedes",
-        nationality: "German"
-      }
-    ]
-  },
-  {
-    position: "5",
-    positionText: "5",
-    points: "75",
-    wins: "0",
-    Driver: {
-      driverId: "lewis_hamilton",
-      permanentNumber: "44",
-      code: "HAM",
-      url: "http://en.wikipedia.org/wiki/Lewis_Hamilton",
-      givenName: "Lewis",
-      familyName: "Hamilton",
-      dateOfBirth: "1985-01-07",
-      nationality: "British"
-    },
-    Constructors: [
-      {
-        constructorId: "mercedes",
-        url: "http://en.wikipedia.org/wiki/Mercedes-Benz_in_Formula_One",
-        name: "Mercedes",
-        nationality: "German"
-      }
-    ]
-  }
-];
-
-// Mock constructor standings
-const MOCK_CONSTRUCTOR_STANDINGS: ConstructorStanding[] = [
-  {
-    position: "1",
-    positionText: "1",
-    points: "178",
-    wins: "3",
-    Constructor: {
-      constructorId: "red_bull",
-      url: "http://en.wikipedia.org/wiki/Red_Bull_Racing",
-      name: "Red Bull Racing",
-      nationality: "Austrian"
-    }
-  },
-  {
-    position: "2",
-    positionText: "2",
-    points: "156",
-    wins: "2",
-    Constructor: {
-      constructorId: "ferrari",
-      url: "http://en.wikipedia.org/wiki/Scuderia_Ferrari",
-      name: "Ferrari",
-      nationality: "Italian"
-    }
-  },
-  {
-    position: "3",
-    positionText: "3",
-    points: "151",
-    wins: "1",
-    Constructor: {
-      constructorId: "mercedes",
-      url: "http://en.wikipedia.org/wiki/Mercedes-Benz_in_Formula_One",
-      name: "Mercedes",
-      nationality: "German"
-    }
-  },
-  {
-    position: "4",
-    positionText: "4",
-    points: "121",
-    wins: "0",
-    Constructor: {
-      constructorId: "mclaren",
-      url: "http://en.wikipedia.org/wiki/McLaren",
-      name: "McLaren",
-      nationality: "British"
-    }
-  },
-  {
-    position: "5",
-    positionText: "5",
-    points: "46",
-    wins: "0",
-    Constructor: {
-      constructorId: "aston_martin",
-      url: "http://en.wikipedia.org/wiki/Aston_Martin_in_Formula_One",
-      name: "Aston Martin",
-      nationality: "British"
-    }
-  }
-];
+// Helper function to format time
+const formatTime = (dateTime: string) => {
+  if (!dateTime) return '';
+  const date = new Date(dateTime);
+  return date.toTimeString().slice(0, 5) + ':00Z'; // Format like HH:MM:00Z
+};
 
 // Fetch the current season's race schedule
 export const useRaceSchedule = () => {
@@ -515,29 +149,58 @@ export const useRaceSchedule = () => {
       try {
         setLoading(true);
         
-        // Try to fetch from API first
-        const response = await fetch(`${BASE_URL}/${CURRENT_YEAR}.json`);
+        // Fetch race schedule from OpenF1 API
+        const response = await fetch(`${OPENF1_BASE_URL}/meetings?year=${CURRENT_YEAR}`);
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch race schedule');
+          throw new Error(`Failed to fetch race schedule: ${response.status}`);
         }
         
         const data = await response.json();
-        const apiRaces = data.MRData.RaceTable.Races;
         
-        // If API returned empty results, use mock data
-        if (apiRaces.length === 0) {
-          console.log('No race data from API, using mock data');
-          setSchedule(MOCK_RACES);
-        } else {
-          setSchedule(apiRaces);
+        if (!data || data.length === 0) {
+          throw new Error('No race data available for the selected season');
         }
         
+        // Transform the data to match our Race interface
+        const races = data.map((meeting: any) => ({
+          meeting_key: meeting.meeting_key,
+          meeting_name: meeting.meeting_name,
+          meeting_official_name: meeting.meeting_official_name,
+          country_code: meeting.country_code,
+          country_name: meeting.country_name,
+          circuit_key: meeting.circuit_key,
+          circuit_short_name: meeting.circuit_short_name,
+          date_start: meeting.date_start,
+          // Transform to compatible format with previous interface
+          date: formatDate(meeting.date_start),
+          time: formatTime(meeting.date_start),
+          season: CURRENT_YEAR,
+          round: `${meeting.meeting_key}`,
+          url: `https://en.wikipedia.org/wiki/${CURRENT_YEAR}_${meeting.meeting_name.replace(/\s+/g, '_')}_Grand_Prix`,
+          raceName: `${meeting.meeting_name} Grand Prix`,
+          Circuit: {
+            circuitId: meeting.circuit_key.toString(),
+            url: `https://en.wikipedia.org/wiki/${meeting.circuit_short_name.replace(/\s+/g, '_')}`,
+            circuitName: meeting.circuit_short_name,
+            Location: {
+              lat: "0", // OpenF1 doesn't provide lat/long
+              long: "0",
+              locality: meeting.meeting_name,
+              country: meeting.country_name
+            }
+          }
+        }));
+        
+        console.log('Fetched races from OpenF1:', races);
+        setSchedule(races);
         setLoading(false);
-      } catch (err) {
+        setError(null);
+        
+      } catch (err: any) {
         console.error('Error fetching schedule:', err);
-        // Fallback to mock data on error
-        setSchedule(MOCK_RACES);
-        setError(null); // We're using mock data, so don't show error
+        setError(err.message || 'Failed to fetch race schedule');
+        setSchedule([]);
         setLoading(false);
       }
     };
@@ -559,28 +222,111 @@ export const useDriverStandings = () => {
       try {
         setLoading(true);
         
-        // Try to fetch from API first
-        const response = await fetch(`${BASE_URL}/${CURRENT_YEAR}/driverStandings.json`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch driver standings');
+        // In OpenF1, we need to find the latest session to get driver info
+        const sessionsResponse = await fetch(`${OPENF1_BASE_URL}/sessions?year=${CURRENT_YEAR}`);
+        
+        if (!sessionsResponse.ok) {
+          throw new Error(`Failed to fetch sessions: ${sessionsResponse.status}`);
         }
         
-        const data = await response.json();
+        const sessions = await sessionsResponse.json();
         
-        // Check if standings are available yet from API
-        if (data.MRData.StandingsTable.StandingsLists.length === 0) {
-          console.log('No driver standings from API, using mock data');
-          setStandings(MOCK_DRIVER_STANDINGS);
-        } else {
-          setStandings(data.MRData.StandingsTable.StandingsLists[0].DriverStandings);
+        if (!sessions || sessions.length === 0) {
+          throw new Error('No session data available');
         }
         
+        // Sort sessions by date (newest first)
+        sessions.sort((a: any, b: any) => 
+          new Date(b.date_start).getTime() - new Date(a.date_start).getTime()
+        );
+        
+        // Get latest session key
+        const latestSessionKey = sessions[0].session_key;
+        
+        // Fetch driver data from the latest session
+        const driversResponse = await fetch(`${OPENF1_BASE_URL}/drivers?session_key=${latestSessionKey}`);
+        
+        if (!driversResponse.ok) {
+          throw new Error(`Failed to fetch drivers: ${driversResponse.status}`);
+        }
+        
+        const drivers = await driversResponse.json();
+        
+        if (!drivers || drivers.length === 0) {
+          throw new Error('No driver data available');
+        }
+        
+        console.log('Fetched drivers from OpenF1:', drivers);
+        
+        // Get driver results to calculate points (if available)
+        const resultsResponse = await fetch(`${OPENF1_BASE_URL}/results?session_key=${latestSessionKey}`);
+        let results: any[] = [];
+        
+        if (resultsResponse.ok) {
+          results = await resultsResponse.json();
+        }
+        
+        // Calculate points based on position (simplified F1 points system)
+        const pointsDistribution: {[key: number]: string} = {
+          1: "25", 2: "18", 3: "15", 4: "12", 5: "10", 
+          6: "8", 7: "6", 8: "4", 9: "2", 10: "1"
+        };
+        
+        // Transform the data to match our DriverStanding interface
+        const driverStandings = drivers.map((driver: any, index: number) => {
+          // Find this driver in results if available
+          const driverResult = results.find(r => r.driver_number === driver.driver_number);
+          const position = driverResult?.position || (index + 1).toString();
+          
+          return {
+            position: position.toString(),
+            positionText: position.toString(),
+            points: pointsDistribution[parseInt(position)] || "0",
+            wins: "0", // OpenF1 doesn't provide this directly
+            Driver: {
+              driver_number: driver.driver_number,
+              broadcast_name: driver.broadcast_name,
+              full_name: driver.full_name,
+              name_acronym: driver.name_acronym,
+              team_name: driver.team_name,
+              team_color: driver.team_color,
+              country_code: driver.country_code,
+              
+              // Compatibility with previous interface
+              driverId: driver.name_acronym?.toLowerCase(),
+              permanentNumber: driver.driver_number,
+              code: driver.name_acronym,
+              givenName: driver.full_name?.split(' ')[0],
+              familyName: driver.full_name?.split(' ').slice(1).join(' '),
+              nationality: driver.country_code
+            },
+            Constructors: [
+              {
+                team_name: driver.team_name,
+                team_color: driver.team_color,
+                
+                // Compatibility with previous interface
+                constructorId: driver.team_name?.toLowerCase().replace(/\s+/g, '_'),
+                name: driver.team_name,
+                nationality: "" // OpenF1 doesn't provide this
+              }
+            ]
+          };
+        });
+        
+        // Sort by position
+        driverStandings.sort((a, b) => 
+          parseInt(a.position || "0") - parseInt(b.position || "0")
+        );
+        
+        setStandings(driverStandings);
         setLoading(false);
-      } catch (err) {
+        setError(null);
+        
+      } catch (err: any) {
         console.error('Error fetching driver standings:', err);
-        // Fallback to mock data on error
-        setStandings(MOCK_DRIVER_STANDINGS);
-        setError(null); // We're using mock data, so don't show error
+        setError(err.message || 'Failed to fetch driver standings');
+        setStandings([]);
         setLoading(false);
       }
     };
@@ -602,28 +348,122 @@ export const useConstructorStandings = () => {
       try {
         setLoading(true);
         
-        // Try to fetch from API first
-        const response = await fetch(`${BASE_URL}/${CURRENT_YEAR}/constructorStandings.json`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch constructor standings');
+        // In OpenF1, we need to find the latest session to get team info
+        const sessionsResponse = await fetch(`${OPENF1_BASE_URL}/sessions?year=${CURRENT_YEAR}`);
+        
+        if (!sessionsResponse.ok) {
+          throw new Error(`Failed to fetch sessions: ${sessionsResponse.status}`);
         }
         
-        const data = await response.json();
+        const sessions = await sessionsResponse.json();
         
-        // Check if standings are available yet from API
-        if (data.MRData.StandingsTable.StandingsLists.length === 0) {
-          console.log('No constructor standings from API, using mock data');
-          setStandings(MOCK_CONSTRUCTOR_STANDINGS);
-        } else {
-          setStandings(data.MRData.StandingsTable.StandingsLists[0].ConstructorStandings);
+        if (!sessions || sessions.length === 0) {
+          throw new Error('No session data available');
         }
         
+        // Sort sessions by date (newest first)
+        sessions.sort((a: any, b: any) => 
+          new Date(b.date_start).getTime() - new Date(a.date_start).getTime()
+        );
+        
+        // Get latest session key
+        const latestSessionKey = sessions[0].session_key;
+        
+        // Fetch driver data to extract team info
+        const driversResponse = await fetch(`${OPENF1_BASE_URL}/drivers?session_key=${latestSessionKey}`);
+        
+        if (!driversResponse.ok) {
+          throw new Error(`Failed to fetch drivers: ${driversResponse.status}`);
+        }
+        
+        const drivers = await driversResponse.json();
+        
+        if (!drivers || drivers.length === 0) {
+          throw new Error('No driver data available');
+        }
+        
+        // Extract unique teams and aggregate points
+        const teamsMap = new Map<string, any>();
+        
+        drivers.forEach((driver: any) => {
+          const teamName = driver.team_name;
+          
+          if (!teamName) return;
+          
+          if (!teamsMap.has(teamName)) {
+            teamsMap.set(teamName, {
+              team_name: teamName,
+              team_color: driver.team_color,
+              points: 0,
+              wins: 0
+            });
+          }
+        });
+        
+        // Get results to calculate team points (if available)
+        const resultsResponse = await fetch(`${OPENF1_BASE_URL}/results?session_key=${latestSessionKey}`);
+        
+        if (resultsResponse.ok) {
+          const results = await resultsResponse.json();
+          
+          // Calculate points based on position (simplified F1 points system)
+          const pointsDistribution: {[key: number]: number} = {
+            1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 
+            6: 8, 7: 6, 8: 4, 9: 2, 10: 1
+          };
+          
+          // Add points to teams
+          results.forEach((result: any) => {
+            const team = teamsMap.get(result.team_name);
+            if (team && result.position && result.position <= 10) {
+              team.points += pointsDistribution[result.position] || 0;
+              
+              // Count wins
+              if (result.position === 1) {
+                team.wins += 1;
+              }
+            }
+          });
+        }
+        
+        // Convert map to array and sort by points
+        const constructorStandings = Array.from(teamsMap.values())
+          .map((team, index) => ({
+            position: (index + 1).toString(),
+            positionText: (index + 1).toString(),
+            points: team.points.toString(),
+            wins: team.wins.toString(),
+            Constructor: {
+              team_name: team.team_name,
+              team_color: team.team_color,
+              
+              // Compatibility with previous interface
+              constructorId: team.team_name?.toLowerCase().replace(/\s+/g, '_'),
+              name: team.team_name,
+              nationality: "" // OpenF1 doesn't provide this
+            }
+          })) as ConstructorStanding[];
+        
+        // Sort by points (descending)
+        constructorStandings.sort((a, b) => 
+          parseInt(b.points || "0") - parseInt(a.points || "0")
+        );
+        
+        // Update positions after sorting
+        constructorStandings.forEach((standing, index) => {
+          standing.position = (index + 1).toString();
+          standing.positionText = (index + 1).toString();
+        });
+        
+        console.log('Generated constructor standings from OpenF1:', constructorStandings);
+        setStandings(constructorStandings);
         setLoading(false);
-      } catch (err) {
+        setError(null);
+        
+      } catch (err: any) {
         console.error('Error fetching constructor standings:', err);
-        // Fallback to mock data on error
-        setStandings(MOCK_CONSTRUCTOR_STANDINGS);
-        setError(null); // We're using mock data, so don't show error
+        setError(err.message || 'Failed to fetch constructor standings');
+        setStandings([]);
         setLoading(false);
       }
     };
@@ -637,21 +477,65 @@ export const useConstructorStandings = () => {
 // Helper function to get race results for a specific round
 export const fetchRaceResults = async (season: string, round: string) => {
   try {
-    const response = await fetch(`${BASE_URL}/${season}/${round}/results.json`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch race results');
+    // Find the session key for the race
+    const sessionsResponse = await fetch(`${OPENF1_BASE_URL}/sessions?year=${season}&meeting_key=${round}`);
+    
+    if (!sessionsResponse.ok) {
+      throw new Error(`Failed to fetch sessions: ${sessionsResponse.status}`);
     }
-    const data = await response.json();
     
-    // If we have results from API, return them
-    if (data.MRData.RaceTable.Races.length > 0) {
-      return data.MRData.RaceTable.Races[0];
-    } 
+    const sessions = await sessionsResponse.json();
     
-    // Otherwise return mock data
-    // For now just return undefined, but in a real app you'd want to create mock results
-    return undefined;
+    // Find race session (type_key 3 is race)
+    const raceSession = sessions.find((s: any) => s.type_key === 3);
+    
+    if (!raceSession) {
+      throw new Error('Race session not found');
+    }
+    
+    const sessionKey = raceSession.session_key;
+    
+    // Fetch results for this session
+    const resultsResponse = await fetch(`${OPENF1_BASE_URL}/results?session_key=${sessionKey}`);
+    
+    if (!resultsResponse.ok) {
+      throw new Error(`Failed to fetch results: ${resultsResponse.status}`);
+    }
+    
+    const results = await resultsResponse.json();
+    
+    // Add additional race details
+    const raceDetails = {
+      season,
+      round,
+      raceName: raceSession.meeting_name + ' Grand Prix',
+      date: formatDate(raceSession.date_start),
+      Circuit: {
+        circuitName: raceSession.circuit_short_name
+      },
+      Results: results.map((r: SessionResult) => ({
+        position: r.position,
+        Driver: {
+          code: r.name_acronym,
+          givenName: r.broadcast_name?.split(' ')[0],
+          familyName: r.broadcast_name?.split(' ').slice(1).join(' '),
+        },
+        Constructor: {
+          name: r.team_name
+        },
+        Time: {
+          time: r.lap_time
+        },
+        laps: r.laps,
+        gap: r.gap_to_leader,
+        interval: r.interval_to_position_ahead
+      }))
+    };
+    
+    return raceDetails;
+    
   } catch (err) {
+    console.error('Error fetching race results:', err);
     throw err;
   }
 };
