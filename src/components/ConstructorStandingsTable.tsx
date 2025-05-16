@@ -45,21 +45,18 @@ export function ConstructorStandingsTable() {
               <TableCell className="font-medium text-center relative">
                 {parseInt(standing.position) <= 3 ? (
                   <div className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2 opacity-10 ${parseInt(standing.position) === 1 ? 'text-yellow-500' :
-                      parseInt(standing.position) === 2 ? 'text-gray-400' : 'text-amber-700'
+                    parseInt(standing.position) === 2 ? 'text-gray-400' : 'text-amber-700'
                     }`}>
                     <TrophyIcon className="h-8 w-8" />
                   </div>
                 ) : null}
                 <span className={`relative z-10 font-bold ${parseInt(standing.position) === 1 ? 'text-yellow-500' :
-                    parseInt(standing.position) === 2 ? 'text-gray-400' :
-                      parseInt(standing.position) === 3 ? 'text-amber-700' : ''
+                  parseInt(standing.position) === 2 ? 'text-gray-400' :
+                    parseInt(standing.position) === 3 ? 'text-amber-700' : ''
                   }`}>{standing.position}</span>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <div className="bg-gray-800 p-1.5 rounded">
-                    <CarIcon className="h-4 w-4 text-gray-300" />
-                  </div>
                   <span className="font-bold">{standing.Constructor.name}</span>
                 </div>
               </TableCell>
