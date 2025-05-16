@@ -24,6 +24,7 @@ export interface Race {
     ThirdPractice?: { date: string; time: string };
     Qualifying?: { date: string; time: string };
     Sprint?: { date: string; time: string };
+    SprintQualifying?: { date: string; time: string };
 }
 
 export interface RaceSchedule {

@@ -39,8 +39,9 @@ function getEventDateRange(race: Race): { startDate: Date | null; endDate: Date 
     race.FirstPractice && parseISO(`${race.FirstPractice.date}T${race.FirstPractice.time || '00:00:00Z'}`),
     race.SecondPractice && parseISO(`${race.SecondPractice.date}T${race.SecondPractice.time || '00:00:00Z'}`),
     race.ThirdPractice && parseISO(`${race.ThirdPractice.date}T${race.ThirdPractice.time || '00:00:00Z'}`),
-    race.Qualifying && parseISO(`${race.Qualifying.date}T${race.Qualifying.time || '00:00:00Z'}`),
+    race.SprintQualifying && parseISO(`${race.SprintQualifying.date}T${race.SprintQualifying.time || '00:00:00Z'}`),
     race.Sprint && parseISO(`${race.Sprint.date}T${race.Sprint.time || '00:00:00Z'}`),
+    race.Qualifying && parseISO(`${race.Qualifying.date}T${race.Qualifying.time || '00:00:00Z'}`),
     parseISO(`${race.date}T${race.time || '00:00:00Z'}`),
   ].filter((date): date is Date => date !== null && isValid(date));
 
@@ -130,6 +131,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
 
   const { startDate, endDate } = getEventDateRange(race);
   const { status, label, className } = getRaceStatus(startDate, endDate);
+  const isSprintWeekend = !!race.Sprint; // Determine if it's a sprint weekend
 
   let formattedDateRange = "Bude oznámeno";
 
@@ -196,27 +198,38 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
                   time={race.FirstPractice.time}
                 />
               )}
-              {race.SecondPractice && (
+
+              {isSprintWeekend && race.SprintQualifying && (
                 <EventItem
-                  title="2. trénink"
-                  date={race.SecondPractice.date}
-                  time={race.SecondPractice.time}
+                  title="Kvalifikace pro Sprint"
+                  date={race.SprintQualifying.date}
+                  time={race.SprintQualifying.time}
                 />
               )}
-              {race.ThirdPractice && (
-                <EventItem
-                  title="3. trénink"
-                  date={race.ThirdPractice.date}
-                  time={race.ThirdPractice.time}
-                />
-              )}
-              {race.Sprint && (
+
+              {isSprintWeekend && race.Sprint && (
                 <EventItem
                   title="Sprint"
                   date={race.Sprint.date}
                   time={race.Sprint.time}
                 />
               )}
+
+              {!isSprintWeekend && race.SecondPractice && (
+                <EventItem
+                  title="2. trénink"
+                  date={race.SecondPractice.date}
+                  time={race.SecondPractice.time}
+                />
+              )}
+              {!isSprintWeekend && race.ThirdPractice && (
+                <EventItem
+                  title="3. trénink"
+                  date={race.ThirdPractice.date}
+                  time={race.ThirdPractice.time}
+                />
+              )}
+
               {race.Qualifying && (
                 <EventItem
                   title="Kvalifikace"
@@ -225,6 +238,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
                   highlight
                 />
               )}
+
               <EventItem
                 title="Závod"
                 date={race.date}
