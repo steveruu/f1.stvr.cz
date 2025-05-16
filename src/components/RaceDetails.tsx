@@ -151,7 +151,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={`bg-gradient-to-b from-f1-dark to-[#1a1a1a] text-white border-gray-800 max-w-3xl rounded-xl sm:rounded-xl max-h-[95vh] md:max-h-[85vh] overflow-auto p-4 sm:p-6 ${status === 'current' ? 'bg-f1-red/20' : ''}`}>
+      <DialogContent className={`bg-gradient-to-b from-f1-dark to-[#1a1a1a] text-white border-gray-800 max-w-3xl w-[calc(100%-2rem)] rounded-xl sm:rounded-xl max-h-[95vh] md:max-h-[85vh] overflow-auto p-4 sm:p-6 ${status === 'current' ? 'bg-f1-red/20' : ''}`}>
         <DialogClose className="absolute right-4 top-4 rounded-full p-2 bg-black/40 text-gray-400 hover:text-white">
           <XIcon className="h-4 w-4" />
         </DialogClose>
@@ -159,13 +159,15 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
         <DialogHeader className="">
           <div className="flex flex-row justify-between items-start pr-8">
             <div>
-              <Badge className={`${className} text-white mb-2`}>
-                {label}
-              </Badge>
+              <div className="flex flex-row gap-2 items-center mb-2">
+                <Badge className={`${className} text-white`}>
+                  {label}
+                </Badge>
+                <Badge className="bg-zinc-500 text-white">Kolo {race.round}</Badge>
+              </div>
               <DialogTitle className="text-xl sm:text-2xl font-bold leading-tight">{race.raceName}</DialogTitle>
               <p className="text-gray-300 mt-1 text-sm sm:text-base">{race.Circuit.circuitName}</p>
             </div>
-            <Badge className="bg-f1-red hidden sm:block">Kolo {race.round}</Badge>
           </div>
         </DialogHeader>
 
