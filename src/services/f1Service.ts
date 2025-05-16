@@ -81,6 +81,7 @@ export interface ConstructorStandingsResponse {
 
 // Base URL for Ergast F1 API
 const BASE_URL = 'https://ergast.com/api/f1';
+const CURRENT_YEAR = '2025'; // Updated to use 2025 instead of "current"
 
 // Fetch the current season's race schedule
 export const useRaceSchedule = () => {
@@ -92,7 +93,7 @@ export const useRaceSchedule = () => {
     const fetchSchedule = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${BASE_URL}/current.json`);
+        const response = await fetch(`${BASE_URL}/${CURRENT_YEAR}.json`);
         if (!response.ok) {
           throw new Error('Failed to fetch race schedule');
         }
@@ -121,12 +122,19 @@ export const useDriverStandings = () => {
     const fetchDriverStandings = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${BASE_URL}/current/driverStandings.json`);
+        const response = await fetch(`${BASE_URL}/${CURRENT_YEAR}/driverStandings.json`);
         if (!response.ok) {
           throw new Error('Failed to fetch driver standings');
         }
         const data = await response.json();
-        setStandings(data.MRData.StandingsTable.StandingsLists[0].DriverStandings);
+        
+        // Check if standings are available yet
+        if (data.MRData.StandingsTable.StandingsLists.length === 0) {
+          setStandings([]);
+        } else {
+          setStandings(data.MRData.StandingsTable.StandingsLists[0].DriverStandings);
+        }
+        
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -150,12 +158,19 @@ export const useConstructorStandings = () => {
     const fetchConstructorStandings = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${BASE_URL}/current/constructorStandings.json`);
+        const response = await fetch(`${BASE_URL}/${CURRENT_YEAR}/constructorStandings.json`);
         if (!response.ok) {
           throw new Error('Failed to fetch constructor standings');
         }
         const data = await response.json();
-        setStandings(data.MRData.StandingsTable.StandingsLists[0].ConstructorStandings);
+        
+        // Check if standings are available yet
+        if (data.MRData.StandingsTable.StandingsLists.length === 0) {
+          setStandings([]);
+        } else {
+          setStandings(data.MRData.StandingsTable.StandingsLists[0].ConstructorStandings);
+        }
+        
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');

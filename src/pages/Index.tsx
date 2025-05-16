@@ -70,6 +70,12 @@ const Index = () => {
               </div>
             ) : (
               <div>
+                {/* Season indicator */}
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-white">2025 Formula 1 Season</h2>
+                  <p className="text-gray-400">View the complete race calendar and results</p>
+                </div>
+                
                 {/* Upcoming races section */}
                 {upcomingRaces.length > 0 && (
                   <div className="mb-10">
@@ -113,7 +119,7 @@ const Index = () => {
                 {/* No races fallback */}
                 {!loading && !error && schedule.length === 0 && (
                   <div className="text-center py-10">
-                    <p className="text-gray-400">No race data available for the current season.</p>
+                    <p className="text-gray-400">No race data available for the 2025 season yet.</p>
                   </div>
                 )}
               </div>
@@ -124,7 +130,7 @@ const Index = () => {
           <TabsContent value="drivers">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
               <div className="w-2 h-6 bg-f1-red mr-2"></div>
-              Driver Championship Standings
+              2025 Driver Championship Standings
             </h2>
             <DriverStandingsTable />
           </TabsContent>
@@ -133,7 +139,7 @@ const Index = () => {
           <TabsContent value="constructors">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
               <div className="w-2 h-6 bg-f1-red mr-2"></div>
-              Constructor Championship Standings
+              2025 Constructor Championship Standings
             </h2>
             <ConstructorStandingsTable />
           </TabsContent>
