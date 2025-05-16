@@ -219,7 +219,7 @@ const Index = () => {
       </main>
 
       {/* Mobile bottom navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/80 border-t border-gray-800 backdrop-blur-md sm:hidden z-20">
+      <div className="fixed bottom-0 left-0 right-0 bg-black/80 border-t border-gray-800 backdrop-blur-md sm:hidden z-20 pb-5">
         <div className="flex justify-around items-center py-3 px-2">
           <button
             onClick={() => setActiveTab("calendar")}
