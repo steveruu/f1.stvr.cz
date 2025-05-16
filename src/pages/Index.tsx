@@ -7,6 +7,7 @@ import { DriverStandingsTable } from "@/components/DriverStandingsTable";
 import { ConstructorStandingsTable } from "@/components/ConstructorStandingsTable";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { CalendarIcon, TrophyIcon, CarIcon } from "lucide-react";
+import { isWithinInterval, parseISO } from "date-fns";
 
 const Index = () => {
   const { schedule, loading, error } = useRaceSchedule();
@@ -19,16 +20,44 @@ const Index = () => {
     setDetailsOpen(true);
   };
 
-  // Check if a race is in the past
-  const isRacePast = (race: Race) => {
-    const today = new Date();
-    const raceDate = new Date(`${race.date}T${race.time || '00:00:00Z'}`);
-    return raceDate < today;
+  // Get event date range for a race
+  const getEventDateRange = (race: Race) => {
+    const dates = [
+      race.FirstPractice && parseISO(`${race.FirstPractice.date}T${race.FirstPractice.time || '00:00:00Z'}`),
+      race.SecondPractice && parseISO(`${race.SecondPractice.date}T${race.SecondPractice.time || '00:00:00Z'}`),
+      race.ThirdPractice && parseISO(`${race.ThirdPractice.date}T${race.ThirdPractice.time || '00:00:00Z'}`),
+      race.Qualifying && parseISO(`${race.Qualifying.date}T${race.Qualifying.time || '00:00:00Z'}`),
+      race.Sprint && parseISO(`${race.Sprint.date}T${race.Sprint.time || '00:00:00Z'}`),
+      parseISO(`${race.date}T${race.time || '00:00:00Z'}`),
+    ].filter((date): date is Date => date !== null);
+
+    if (dates.length === 0) return { startDate: null, endDate: null };
+
+    return {
+      startDate: dates.reduce((min, date) => date < min ? date : min),
+      endDate: dates.reduce((max, date) => date > max ? date : max),
+    };
   };
 
-  // Split races into past and upcoming
+  // Check if a race is in the past
+  const isRacePast = (race: Race) => {
+    const { endDate } = getEventDateRange(race);
+    if (!endDate) return false;
+    return endDate < new Date();
+  };
+
+  // Check if a race is currently happening
+  const isRaceCurrent = (race: Race) => {
+    const { startDate, endDate } = getEventDateRange(race);
+    if (!startDate || !endDate) return false;
+    const now = new Date();
+    return isWithinInterval(now, { start: startDate, end: endDate });
+  };
+
+  // Split races into past, current, and upcoming
   const pastRaces = schedule.filter(isRacePast);
-  const upcomingRaces = schedule.filter(race => !isRacePast(race));
+  const currentRaces = schedule.filter(isRaceCurrent);
+  const upcomingRaces = schedule.filter(race => !isRacePast(race) && !isRaceCurrent(race));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-f1-dark to-[#1a1a1a] text-white">
@@ -84,6 +113,26 @@ const Index = () => {
                   <h2 className="text-3xl font-bold text-white">Sezóna Formule 1 2025</h2>
                   <p className="text-gray-300">Kompletní kalendář závodů a výsledky</p>
                 </div>
+
+                {/* Current races section */}
+                {currentRaces.length > 0 && (
+                  <div className="mb-12">
+                    <h2 className="text-2xl font-semibold mb-6 flex items-center">
+                      <div className="w-1.5 h-8 bg-f1-red mr-3 rounded-full"></div>
+                      Právě probíhá
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {currentRaces.map((race) => (
+                        <RaceCard
+                          key={race.round}
+                          race={race}
+                          onClick={() => handleRaceClick(race)}
+                          isPast={false}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Upcoming races section */}
                 {upcomingRaces.length > 0 && (

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchRaceResults, Race } from "@/services/f1Service";
-import { format, parseISO, isValid } from "date-fns";
+import { format, parseISO, isValid, isWithinInterval, isSameDay } from "date-fns";
 import { cs } from "date-fns/locale";
 import { CalendarIcon, MapPinIcon, FlagIcon, ClockIcon, TrophyIcon, InfoIcon } from "lucide-react";
 
@@ -14,8 +14,84 @@ interface RaceDetailsProps {
   onClose: () => void;
 }
 
+interface RaceResult {
+  position: string;
+  Driver: {
+    code: string;
+    givenName: string;
+    familyName: string;
+  };
+  Constructor: {
+    name: string;
+  };
+  Time?: {
+    time: string;
+  };
+  status?: string;
+}
+
+interface RaceResultsResponse {
+  Results: RaceResult[];
+}
+
+function getEventDateRange(race: Race): { startDate: Date | null; endDate: Date | null } {
+  const dates = [
+    race.FirstPractice && parseISO(`${race.FirstPractice.date}T${race.FirstPractice.time || '00:00:00Z'}`),
+    race.SecondPractice && parseISO(`${race.SecondPractice.date}T${race.SecondPractice.time || '00:00:00Z'}`),
+    race.ThirdPractice && parseISO(`${race.ThirdPractice.date}T${race.ThirdPractice.time || '00:00:00Z'}`),
+    race.Qualifying && parseISO(`${race.Qualifying.date}T${race.Qualifying.time || '00:00:00Z'}`),
+    race.Sprint && parseISO(`${race.Sprint.date}T${race.Sprint.time || '00:00:00Z'}`),
+    parseISO(`${race.date}T${race.time || '00:00:00Z'}`),
+  ].filter((date): date is Date => date !== null && isValid(date));
+
+  if (dates.length === 0) return { startDate: null, endDate: null };
+
+  return {
+    startDate: dates.reduce((min, date) => date < min ? date : min),
+    endDate: dates.reduce((max, date) => date > max ? date : max),
+  };
+}
+
+function getRaceStatus(startDate: Date | null, endDate: Date | null): {
+  status: "past" | "current" | "upcoming";
+  label: string;
+  className: string;
+} {
+  const now = new Date();
+
+  if (!startDate || !endDate) {
+    return {
+      status: "upcoming",
+      label: "Bude oznámeno",
+      className: "bg-f1-red",
+    };
+  }
+
+  if (endDate < now) {
+    return {
+      status: "past",
+      label: "Dokončeno",
+      className: "bg-gray-700",
+    };
+  }
+
+  if (isWithinInterval(now, { start: startDate, end: endDate })) {
+    return {
+      status: "current",
+      label: "Právě probíhá",
+      className: "bg-f1-red",
+    };
+  }
+
+  return {
+    status: "upcoming",
+    label: "Nadcházející",
+    className: "bg-f1-red",
+  };
+}
+
 export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
-  const [raceResults, setRaceResults] = useState<any | null>(null);
+  const [raceResults, setRaceResults] = useState<RaceResultsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,12 +99,13 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
     const getRaceResults = async () => {
       if (!race) return;
 
+      const { endDate } = getEventDateRange(race);
+      if (!endDate) return;
+
       // Check if the race date has passed to fetch results
       try {
         const today = new Date();
-        const raceDate = parseISO(`${race.date}T${race.time || '00:00:00Z'}`);
-
-        if (isValid(raceDate) && raceDate < today) {
+        if (endDate < today) {
           try {
             setLoading(true);
             const results = await fetchRaceResults(race.season, race.round);
@@ -40,7 +117,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
           }
         }
       } catch (err) {
-        console.error("Error parsing race date:", err);
+        console.error("Error checking race date:", err);
       }
     };
 
@@ -51,38 +128,33 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
 
   if (!race) return null;
 
-  // TBA
-  let formattedDate = "Bude oznámeno";
-  let formattedTime = "Bude oznámeno";
-  let isPast = false;
+  const { startDate, endDate } = getEventDateRange(race);
+  const { status, label, className } = getRaceStatus(startDate, endDate);
+
+  let formattedDateRange = "Bude oznámeno";
 
   try {
-    if (race.date) {
-      const dateStr = `${race.date}T${race.time || '00:00:00Z'}`;
-      const raceDate = parseISO(dateStr);
-
-      if (isValid(raceDate)) {
-        formattedDate = format(raceDate, "EEEE d. MMMM yyyy", { locale: cs });
-        formattedTime = race.time ? format(raceDate, "HH:mm", { locale: cs }) : 'Bude oznámeno';
-
-        // Check if race is in the past
-        const today = new Date();
-        isPast = raceDate < today;
+    if (startDate && endDate) {
+      if (isSameDay(startDate, endDate)) {
+        formattedDateRange = format(startDate, "EEEE d. MMMM yyyy", { locale: cs });
+      } else {
+        const startStr = format(startDate, "d.", { locale: cs });
+        const endStr = format(endDate, "EEEE d. MMMM yyyy", { locale: cs });
+        formattedDateRange = `${startStr} - ${endStr}`;
       }
     }
   } catch (error) {
-    console.error("Error formatting race date:", error);
+    console.error("Error formatting race date range:", error);
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-gradient-to-b from-f1-dark to-[#1a1a1a] text-white border-gray-800 max-w-3xl rounded-xl">
+      <DialogContent className={`bg-gradient-to-b from-f1-dark to-[#1a1a1a] text-white border-gray-800 max-w-3xl rounded-xl ${status === 'current' ? 'bg-f1-red/20' : ''}`}>
         <DialogHeader>
           <div className="flex justify-between items-start">
             <div>
-              <Badge className="mb-2" variant={isPast ? "secondary" : "default"}
-                className={`${isPast ? 'bg-gray-700' : 'bg-f1-red'} text-white mb-2`}>
-                {isPast ? "Dokončeno" : "Nadcházející"}
+              <Badge className={`${className} text-white mb-2`}>
+                {label}
               </Badge>
               <DialogTitle className="text-2xl font-bold">{race.raceName}</DialogTitle>
               <p className="text-gray-300 mt-1">{race.Circuit.circuitName}</p>
@@ -93,10 +165,10 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
 
         <div className="flex items-center mb-4 text-gray-300 bg-black/20 rounded-md p-2.5">
           <CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />
-          <span>{formattedDate} • {formattedTime}</span>
+          <span>{formattedDateRange}</span>
         </div>
 
-        <Tabs defaultValue="schedule" className="mt-2">
+        <Tabs defaultValue="schedule" className="mt-4">
           <TabsList className="bg-black/40 border border-gray-800 rounded-lg mb-4 p-1">
             <TabsTrigger value="schedule" className="rounded-md data-[state=active]:bg-f1-red data-[state=active]:text-white">
               <ClockIcon className="h-4 w-4 mr-1.5" />
@@ -106,7 +178,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
               <MapPinIcon className="h-4 w-4 mr-1.5" />
               Okruh
             </TabsTrigger>
-            {isPast && (
+            {status === "past" && (
               <TabsTrigger value="results" className="rounded-md data-[state=active]:bg-f1-red data-[state=active]:text-white">
                 <TrophyIcon className="h-4 w-4 mr-1.5" />
                 Výsledky
@@ -114,7 +186,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
             )}
           </TabsList>
 
-          <TabsContent value="schedule" className="pt-2">
+          <TabsContent value="schedule">
             <h4 className="font-semibold text-lg mb-4">Program závodního víkendu</h4>
             <div className="space-y-3">
               {race.FirstPractice && (
@@ -204,7 +276,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
             </div>
           </TabsContent>
 
-          {isPast && (
+          {status === "past" && (
             <TabsContent value="results">
               <h4 className="font-semibold text-lg mb-4">Výsledky závodu</h4>
               {loading && <p className="text-gray-400">Načítání výsledků...</p>}
@@ -224,7 +296,7 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {raceResults.Results.map((result: any) => (
+                      {raceResults.Results.map((result: RaceResult) => (
                         <tr key={result.position} className="border-b border-gray-800 last:border-0 hover:bg-white/5">
                           <td className="py-3 px-4">{result.position}</td>
                           <td className="py-3 px-4">
@@ -249,7 +321,12 @@ export function RaceDetails({ race, isOpen, onClose }: RaceDetailsProps) {
   );
 }
 
-function EventItem({ title, date, time, highlight = false }) {
+function EventItem({ title, date, time, highlight = false }: {
+  title: string;
+  date?: string;
+  time?: string;
+  highlight?: boolean;
+}) {
   let formattedDate = "Bude oznámeno";
   let formattedTime = "Bude oznámeno";
 
@@ -265,11 +342,33 @@ function EventItem({ title, date, time, highlight = false }) {
     console.error("Error formatting event date:", error);
   }
 
+  const isCurrentEvent = () => {
+    if (!date || !time) return false;
+    const eventDate = parseISO(`${date}T${time}`);
+    if (!isValid(eventDate)) return false;
+
+    const eventEnd = new Date(eventDate);
+    eventEnd.setHours(eventEnd.getHours() + 2); // Assume events last 2 hours
+
+    return isWithinInterval(new Date(), { start: eventDate, end: eventEnd });
+  };
+
+  const isCurrent = isCurrentEvent();
+
   return (
-    <div className={`flex justify-between items-center p-3 rounded-lg ${highlight ? 'bg-f1-red/10 border border-f1-red/20' : 'bg-black/20 border border-gray-800'}`}>
+    <div className={`flex justify-between items-center p-3 rounded-lg ${isCurrent ? 'bg-f1-red/20 border border-f1-red/20' :
+      highlight ? 'bg-f1-red/10 border border-f1-red/20' :
+        'bg-black/20 border border-gray-800'
+      }`}>
       <div className="flex items-center">
-        <div className={`w-1.5 h-10 ${highlight ? 'bg-f1-red' : 'bg-gray-600'} rounded-full mr-3`}></div>
-        <span className={`font-medium ${highlight ? 'text-f1-red' : 'text-white'}`}>{title}</span>
+        <div className={`w-1.5 h-10 ${isCurrent ? 'bg-f1-red' :
+          highlight ? 'bg-f1-red' :
+            'bg-gray-600'
+          } rounded-full mr-3`}></div>
+        <span className={`font-medium ${isCurrent ? 'text-f1-red' :
+          highlight ? 'text-f1-red' :
+            'text-white'
+          }`}>{title}</span>
       </div>
       <div className="text-right">
         <span className="block text-sm text-gray-400">{formattedDate}</span>
