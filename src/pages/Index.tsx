@@ -81,7 +81,6 @@ const Index = () => {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
               <span className="text-f1-red">f1</span>.stvr.cz
             </h1>
-            <p className="text-gray-300 mt-1 sm:mt-2 text-sm sm:text-lg">intuitivní kalendář závodů a výsledky</p>
           </div>
         </div>
       </header>
@@ -250,10 +249,10 @@ const Index = () => {
       <footer className="bg-black/40 backdrop-blur-sm border-t border-gray-800 py-4 sm:py-6 hidden sm:block">
         <div className="container mx-auto text-center">
           <p className="text-gray-300 text-sm">
-            Data poskytuje <a href="https://ergast.com/mrd/" target="_blank" rel="noopener noreferrer" className="text-f1-red hover:underline">Ergast F1 API</a>
+            Data poskytuje <a href="https://api.jolpi.ca/ergast/" target="_blank" rel="noopener noreferrer" className="text-f1-red hover:underline">Jolpica F1 API</a>
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            f1.stvr.cz není spojen s Formula 1, FIA ani Liberty Media
+            f1.stvr.cz není spojen s Formula 1, FIA, Jolpica ani Liberty Media
           </p>
         </div>
       </footer>
