@@ -1,73 +1,142 @@
-# Welcome to your Lovable project
+# f1.stvr.cz
 
-## Project info
+Moderní webová aplikace pro sledování aktuálních výsledků, pořadí jezdců a týmů v šampionátu Formule 1. Aplikace je postavena s využitím moderních technologií a zaměřuje se na rychlost a přehlednost.
 
-**URL**: https://lovable.dev/projects/e8d70524-ea41-4e5b-8527-5326d3602f7b
+## Klíčové vlastnosti
 
-## How can I edit this code?
+* 🏁 **Výsledky závodů:** Detailní výsledky všech Velkých cen.
+* 🏆 **Pořadí šampionátu:** Aktuální pořadí jezdců a konstruktérů.
+* 📱 **Responzivní design:** Pohodlné zobrazení na počítačích, tabletech i mobilních telefonech.
+* ⚙️ **PWA (Progressive Web App):** Možnost instalace aplikace pro rychlý přístup a částečnou offline funkcionalitu.
+* 📊 **Statistiky a grafy:** Vizuální znázornění dat pomocí grafů (využívá Recharts).
 
-There are several ways of editing your application.
+## Použité technologie
 
-**Use Lovable**
+* **Frontend Framework:** React (v18) s Vite
+* **Jazyk:** TypeScript
+* **Stylování:** Tailwind CSS
+* **UI Komponenty:** Shadcn/ui, Lucide Icons
+* **Routing:** React Router DOM (v6)
+* **Správa stavu & Data Fetching:** TanStack Query (React Query v5)
+* **Formuláře:** React Hook Form (v7) se Zod pro validaci
+* **Utility:** date-fns, clsx, tailwind-merge
+* **Vývojové nástroje:** ESLint, Prettier (předpoklad, doporučeno)
+* **Build Tool:** Vite
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e8d70524-ea41-4e5b-8527-5326d3602f7b) and start prompting.
+## Instalace a spuštění
 
-Changes made via Lovable will be committed automatically to this repo.
+### Předpoklady
 
-**Use your preferred IDE**
+* [Node.js](https://nodejs.org/) (doporučená verze LTS)
+* [Bun](https://bun.sh/) (preferovaný správce balíčků, viz `bun.lockb`)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Kroky
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. **Klonování repozitáře:**
+  
+    ```bash
+    git clone https://github.com/steveruu/f1.stvr.cz.git
+    cd f1.stvr.cz
+    ```
 
-Follow these steps:
+2. **Instalace závislostí:**
+    Pokud používáte `bun`:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+    ```bash
+    bun install
+    ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+    Alternativně pomocí `npm`:
 
-# Step 3: Install the necessary dependencies.
-npm i
+    ```bash
+    npm install
+    ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+    Nebo `yarn`:
+
+    ```bash
+    yarn install
+
+    ```
+
+3. **Spuštění vývojového serveru:**
+    Pomocí `bun`:
+
+    ```bash
+    bun run dev
+    ```
+
+    Alternativně pomocí `npm`:
+
+    ```bash
+    npm run dev
+    ```
+
+    Aplikace by měla být dostupná na adrese `http://localhost:5173` (výchozí port pro Vite).
+
+4. **Sestavení (build) pro produkci:**
+    Pomocí `bun`:
+
+    ```bash
+    bun run build
+    ```
+
+    Alternativně pomocí `npm`:
+
+    ```bash
+    npm run build
+    ```
+
+    Výstup bude ve složce `dist`.
+
+5. **Linting:**
+    Pomocí `bun`:
+
+    ```bash
+    bun run lint
+    ```
+
+    Alternativně pomocí `npm`:
+
+    ```bash
+    npm run lint
+    ```
+
+## Struktura projektu
+
+Přehled hlavních adresářů a souborů:
+
+```text
+f1.stvr.cz/
+├── public/             # Statické soubory (ikony, obrázky, manifest.json)
+├── src/                # Zdrojový kód aplikace
+│   ├── app/            # Hlavní části aplikace (např. stránky, rozložení)
+│   │   ├── races/      # Komponenty a logika pro výsledky závodů
+│   │   └── standings/  # Komponenty a logika pro pořadí
+│   ├── components/     # Opakovaně použitelné UI komponenty
+│   │   └── ui/         # Komponenty ze Shadcn/ui
+│   ├── hooks/          # Vlastní React hooky
+│   ├── lib/            # Utility, pomocné funkce (např. date-fns konfigurace)
+│   ├── pages/          # Komponenty pro jednotlivé stránky (použito s React Router)
+│   ├── services/       # Služby pro komunikaci s API, správa dat
+│   └── main.tsx        # Vstupní bod aplikace
+├── .env.example        # Příklad konfiguračního souboru pro proměnné prostředí
+├── bun.lockb           # Zámkový soubor pro Bun
+├── package.json        # Seznam závislostí a skriptů
+├── vite.config.ts      # Konfigurace Vite
+├── tailwind.config.ts  # Konfigurace Tailwind CSS
+├── tsconfig.json       # Konfigurace TypeScriptu
+└── README.md           # Tento soubor
 ```
 
-**Edit a file directly in GitHub**
+## Přispívání
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Pokud máte zájem přispět k vývoji, prosím, vytvořte Pull Request nebo Issue na GitHubu.
 
-**Use GitHub Codespaces**
+## Licence
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Tento projekt je distribuován pod licencí [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html).
 
-## What technologies are used for this project?
+---
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/e8d70524-ea41-4e5b-8527-5326d3602f7b) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Vytvořeno s ❤️ pro fanoušky Formule 1.
