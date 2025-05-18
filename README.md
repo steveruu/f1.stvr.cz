@@ -1,8 +1,8 @@
-# f1.stvr.cz
+# 🏎️ f1.stvr.cz
 
 Moderní webová aplikace pro sledování aktuálních výsledků, pořadí jezdců a týmů v šampionátu Formule 1. Aplikace je postavena s využitím moderních technologií a zaměřuje se na rychlost a přehlednost.
 
-## Klíčové vlastnosti
+## 🔧 Klíčové vlastnosti
 
 * 🏁 **Výsledky závodů:** Detailní výsledky všech Velkých cen.
 * 🏆 **Pořadí šampionátu:** Aktuální pořadí jezdců a konstruktérů.
@@ -10,7 +10,7 @@ Moderní webová aplikace pro sledování aktuálních výsledků, pořadí jezd
 * ⚙️ **PWA (Progressive Web App):** Možnost instalace aplikace pro rychlý přístup a částečnou offline funkcionalitu.
 * 📊 **Statistiky a grafy:** Vizuální znázornění dat pomocí grafů (využívá Recharts).
 
-## Použité technologie
+## 💻 Použité technologie
 
 * **Frontend Framework:** React (v18) s Vite
 * **Jazyk:** TypeScript
@@ -23,7 +23,7 @@ Moderní webová aplikace pro sledování aktuálních výsledků, pořadí jezd
 * **Vývojové nástroje:** ESLint, Prettier (předpoklad, doporučeno)
 * **Build Tool:** Vite
 
-## Instalace a spuštění
+## 🧠 Instalace a spuštění
 
 ### Předpoklady
 
@@ -102,7 +102,7 @@ Moderní webová aplikace pro sledování aktuálních výsledků, pořadí jezd
     npm run lint
     ```
 
-## Struktura projektu
+## 📂 Struktura projektu
 
 Přehled hlavních adresářů a souborů:
 
